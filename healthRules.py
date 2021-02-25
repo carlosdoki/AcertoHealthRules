@@ -2,7 +2,7 @@
 '''
 Marks nodes as historical for an AppDynamics application
 
-Usage: python marknodeshistorical.py [options]
+Usage: python healthRules.py [options]
 
 Options:
   -h, --help                     show this help
@@ -16,8 +16,10 @@ import json
 import sys
 import base64
 
+
 def usage():
     print(__doc__)
+
 
 def get_auth(host, user, password):
     url = '{}/controller/auth'.format(host)
@@ -30,13 +32,14 @@ def get_auth(host, user, password):
     params = (
         ('action', 'login'),
     )
-    
+
     response = requests.get(url, headers=headers, params=params)
     global token
     global cookies
-    cookies = response.cookies 
+    cookies = response.cookies
     token = response.cookies.get("X-CSRF-TOKEN")
     return token
+
 
 def main(argv):
 
@@ -45,7 +48,8 @@ def main(argv):
     userPassword = 'yourpassword'
 
     try:
-        opts, args = getopt.getopt(argv, "hc:n:p:a:", ["help", "controllerURL=", "userName=", "userPassword="])
+        opts, args = getopt.getopt(
+            argv, "hc:n:p:a:", ["help", "controllerURL=", "userName=", "userPassword="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -63,7 +67,8 @@ def main(argv):
         usage()
         sys.exit(2)
     token = get_auth(controllerURL, userName, userPassword)
-    resp = requests.get(controllerURL + '/controller/rest/applications?output=JSON', auth=(userName, userPassword), verify=True, timeout=60)
+    resp = requests.get(controllerURL + '/controller/rest/applications?output=JSON',
+                        auth=(userName, userPassword), verify=True, timeout=60)
     if (resp.ok):
         appList = json.loads(resp.content)
         for app in appList:
@@ -75,10 +80,11 @@ def main(argv):
             #     'Accept': 'application/json,text/plain,*/*',
             #     'X-CSRF-TOKEN': token
             # }
-            # data = '{"timezone":"America/Sao_Paulo","scheduleConfiguration":{"startTime":"05:00","endTime":"22:00","days":["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"],"scheduleFrequency":"WEEKLY"},"name":"HorarioComercial", "description":"Horario das 05:00 ate as 22:00 - Seg a Sex."}'
+            # data = '{"timezone":"America/Sao_Paulo","scheduleConfiguration":{"startTime":"08:00","endTime":"22:00","days":["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"],"scheduleFrequency":"WEEKLY"},"name":"HorarioComercial", "description":"Horario das 08:00 ate as 22:00 - Seg a Sex."}'
             # resp2 = requests.post(url, headers=headers, data=data, cookies=cookies)
 
-            url = '{}/controller/alerting/rest/v1/applications/{}/schedules'.format(controllerURL, app['id'])
+            url = '{}/controller/alerting/rest/v1/applications/{}/schedules'.format(
+                controllerURL, app['id'])
             headers = {
                 'Content-Type': 'application/json;charset=UTF-8',
                 'Accept': 'application/json,text/plain,*/*',
@@ -91,29 +97,32 @@ def main(argv):
                 for schedule in scheduleList:
                     if 'HorarioComercial' in schedule['name']:
                         scheduleid = schedule['id']
-                
+
                 if (scheduleid > 0):
-                    url = '{}/controller/restui/policy2/policies/{}'.format(controllerURL, app['id'])
+                    url = '{}/controller/restui/policy2/policies/{}'.format(
+                        controllerURL, app['id'])
                     headers = {
                         'Content-Type': 'application/json;charset=UTF-8',
                         'Accept': 'application/json,text/plain,*/*',
                         'X-CSRF-TOKEN': token
                     }
-                    resp3 = requests.get(url, headers=headers,cookies=cookies)
+                    resp3 = requests.get(url, headers=headers, cookies=cookies)
                     if (resp3.ok):
                         policeList = json.loads(resp3.content)
                         for police in policeList:
                             police['schedule'] = scheduleid
                             police['alwaysEnabled'] = False
                             data = json.dumps(police)
-                            url = '{}/controller/restui/healthRules/update'.format(controllerURL)
+                            url = '{}/controller/restui/healthRules/update'.format(
+                                controllerURL)
                             headers = {
                                 'Content-Type': 'application/json;charset=UTF-8',
                                 'Accept': 'application/json,text/plain,*/*',
                                 'X-CSRF-TOKEN': token
                             }
 
-                            resp4 = requests.post(url, headers=headers, data=data, cookies=cookies)
+                            resp4 = requests.post(
+                                url, headers=headers, data=data, cookies=cookies)
                             if (!resp4.ok):
                                 print(resp4.raise_for_status())
                     else:
@@ -124,5 +133,31 @@ def main(argv):
     else:
         print(resp.raise_for_status())
 
+
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+# Update Schedule
+    # for schedule in scheduleList:
+    #     if 'HorarioComercial' in schedule['name']:
+    #         data = json.dumps(schedule)
+    #         scheduleid = schedule['id']
+    #         schedule['description'] = "Horario das 08:00 ate as 22:00 - Seg a Sex."
+    #         data = data.replace(
+    #             '}', ', "scheduleConfiguration":{"startTime":"08:00","endTime":"22:00","days":["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"],"scheduleFrequency":"WEEKLY"}}')
+    #         # https: // kroton.saas.appdynamics.com/controller/alerting/rest/v1/applications/6596/schedules/39702
+    #         url = '{}/controller/alerting/rest/v1/applications/{}/schedules/{}'.format(
+    #             controllerURL, app['id'], scheduleid)
+    #         headers = {
+    #             'Content-Type': 'application/json;charset=UTF-8',
+    #             'Accept': 'application/json,text/plain,*/*',
+    #             'X-CSRF-TOKEN': token
+    #         }
+    #         # print(data)
+    #         resp3 = requests.put(
+    #             url, headers=headers, data=data, cookies=cookies)
+    #         if(resp3.ok):
+    #             print("Schedule updated")
+    #         else:
+    #             print(resp3.raise_for_status())
