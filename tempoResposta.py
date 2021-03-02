@@ -73,7 +73,8 @@ def main(argv):
         appList = json.loads(resp.content)
         for app in appList:
             print(app['name'])
-            if ("Colaborar_AVA" in app['name']):
+            if ("Colaborar_Pagamentos" in app['name']):
+                appId = app['id']
                 url = '{}/controller/alerting/rest/v1/applications/{}/schedules'.format(
                     controllerURL, app['id'])
                 headers = {
@@ -103,6 +104,7 @@ def main(argv):
                                 print(police['name'])
                                 original = '{"id":27964,"version":7,"name":"Corretor Veloz Forum - Tempo de resposta do normal","nameUnique":true,"applicationId":2674,"affectedEntityDefinitionRule":{"id":1062450,"version":1,"aemcType":"BT_AFFECTED_EMC","componentIds":[],"missingEntities":null,"type":"SPECIFIC","businessTransactionIds":[684982],"nameMatch":null},"type":"BUSINESS_TRANSACTION","description":"Average Response Time (ms) is > 2 : 3 standard deviation of the default baseline and CALLS_PER_MINUTE is > 50 per minute for the last 30 minutes","enabled":true,"critical":{"id":136246,"version":0,"condition":{"id":241426,"version":0,"type":"POLICY_LEAF_CONDITION","metricExpression":{"type":"LEAF_METRIC_EXPRESSION","literalValueExpression":false,"literalValue":0,"metricDefinition":{"type":"LOGICAL_METRIC","logicalMetricName":"95th Percentile Response Time (ms)","scope":null,"metricId":0},"functionType":"VALUE","displayName":"null","inputMetricText":false,"inputMetricPath":"Root||Business Transaction Performance||95th Percentile Response Time (ms)","value":0},"operator":"GREATER_THAN","value":3,"valueUnitType":"BASELINE_STANDARD_DEVIATION","useActiveBaseline":true,"baselineId":0,"conditionExpression":null,"conditionDisplayName":"Average Response Time (ms) > 5000","shortName":"A","conditionValueFunction":null,"entityDefs":[],"metrics":[],"triggerOnNoData":false,"enableTriggers":true,"minTriggers":5},"entityAggregationScope":{"type":"AGGREGATE","value":0},"conditionAggregationType":"ALL","conditionExpression":null},"warning":{"id":136247,"version":0,"condition":{"id":241427,"version":0,"type":"POLICY_LEAF_CONDITION","metricExpression":{"type":"LEAF_METRIC_EXPRESSION","literalValueExpression":false,"literalValue":0,"metricDefinition":{"type":"LOGICAL_METRIC","logicalMetricName":"95th Percentile Response Time (ms)","scope":null,"metricId":0},"functionType":"VALUE","displayName":"null","inputMetricText":false,"inputMetricPath":"Root||Business Transaction Performance||95th Percentile Response Time (ms)","value":0},"operator":"GREATER_THAN","value":2,"valueUnitType":"BASELINE_STANDARD_DEVIATION","useActiveBaseline":true,"baselineId":0,"conditionExpression":null,"conditionDisplayName":"Average Response Time (ms) > 5000","shortName":"A","conditionValueFunction":null,"entityDefs":[],"metrics":[],"triggerOnNoData":false,"enableTriggers":true,"minTriggers":5},"entityAggregationScope":{"type":"AGGREGATE","value":0},"conditionAggregationType":"ALL","conditionExpression":null},"durationInMinutes":10,"waitTimeInMinutes":10,"schedule":39716,"alwaysEnabled":false,"defaultPolicy":true,"createdBy":{"id":2041,"type":"USER","mappedEntityId":"2079","name":"carlos.doki"},"modifiedBy":{"id":2041,"type":"USER","mappedEntityId":"2079","name":"carlos.doki"},"createdOn":null,"modifiedOn":null}'
                                 originalJson = json.loads(original)
+                                originalJson['applicationId'] = appId
                                 originalJson['id'] = police['id']
                                 originalJson['name'] = police['name']
                                 originalJson['affectedEntityDefinitionRule']['businessTransactionIds'] = police[
@@ -113,6 +115,7 @@ def main(argv):
                                 originalJson['warning']['condition']['id'] = police['warning']['condition']['id']
 
                                 data = json.dumps(originalJson)
+
                                 url = '{}/controller/restui/healthRules/update'.format(
                                     controllerURL)
                                 headers = {
